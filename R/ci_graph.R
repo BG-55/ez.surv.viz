@@ -22,6 +22,9 @@
 #' Melanoma2 <- 
 #' Melanoma %>% 
 #' mutate(status = as.factor(recode(status, `2` = 0, `1` = 1, `3` = 2)))
+#' #Make the status a labeled factor
+#' Melanoma2 <- Melanoma2 %>% mutate(status = factor(status,levels = c("0","1","2"),
+#'    labels = c("Censored","Melanoma","Other Causes")))
 #' #Define the model
 #' ajfit <- survfit(Surv(time, status) ~1, data = Melanoma2)
 #' #Plot it
@@ -80,13 +83,17 @@ ci_graph <- function(model_name, outcome_names=NULL, outcome_colors=NULL, col_pa
       ggplot2::scale_color_manual(name = "Outcome", values = outcome_colors,
                          labels = outcome_names) +
       ggplot2::scale_fill_manual(name = "Outcome", values = outcome_colors,
-                        labels = outcome_names)
+                        labels = outcome_names) +
+      ggplot2::theme(legend.position = "inside",
+                     legend.position.inside = c(0.15,0.9))
   } else {
    dat2 %>% dplyr::filter(state != "(s0)") %>% ggplot2::ggplot() +
       ggplot2::geom_step(ggplot2::aes(x = time, y = estimate, color = state)) +
       ggplot2::theme_classic() +  ggplot2::theme(legend.position="bottom") +
       ggplot2::labs(x = xlab_name, y = ylab_name) +
       ggplot2::scale_color_manual(name = "Outcome", values = outcome_colors,
-                                  labels = outcome_names)
+                                  labels = outcome_names) +
+      ggplot2::theme(legend.position = "inside",
+                     legend.position.inside = c(0.15,0.9))
   }
 }

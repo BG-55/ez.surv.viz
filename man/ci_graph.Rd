@@ -46,6 +46,9 @@ library(dplyr)
 Melanoma2 <- 
 Melanoma \%>\% 
 mutate(status = as.factor(recode(status, `2` = 0, `1` = 1, `3` = 2)))
+#Make the status a labeled factor
+Melanoma2 <- Melanoma2 \%>\% mutate(status = factor(status,levels = c("0","1","2"),
+   labels = c("Censored","Melanoma","Other Causes")))
 #Define the model
 ajfit <- survfit(Surv(time, status) ~1, data = Melanoma2)
 #Plot it
