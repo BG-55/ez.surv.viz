@@ -3,7 +3,6 @@
 #' @importFrom dplyr %>%
 #'
 #' @param model_name A competing risks object of the class survfitms survfit
-#' @param outcome_names A vector of the outcome names, default is 1, 2, ... n
 #' @param outcome_colors A vector consisting of the color names/hexadecimals. Default is colors from Dark 3 palette
 #' @param col_palette A string containing the name of the hcl palette to use. See hcl.pals() for names. Default is Dark 3
 #' @param xlab_name Label for the x-axis. Default is "Time"
@@ -30,7 +29,7 @@
 #' #Plot it
 #' ci_graph(ajfit)
 #' 
-ci_graph <- function(model_name, outcome_names=NULL, outcome_colors=NULL, col_palette = "Dark 3",
+ci_graph <- function(model_name, outcome_colors=NULL, col_palette = "Dark 3",
                      xlab_name="Time",ylab_name="Cumlative Incidence", conf_int = TRUE,
                      conf_int_alpha = 0.2) {
   #Check if missing model
@@ -44,17 +43,10 @@ ci_graph <- function(model_name, outcome_names=NULL, outcome_colors=NULL, col_pa
   }
   #Tidy the the data
   dat2 <- broom::tidy(model_name)
-  #Set outcome names
-  if(is.null(outcome_names)) {
-    outcome_names <- dat2 %>% dplyr::filter(state != "(s0)") %>% dplyr::pull(.,state) %>% base::unique(.)
-  }
-  #Check outcome name length
-  if(length(outcome_names) != dplyr::n_distinct((dat2 %>% dplyr::filter(state != "(s0)"))$state)) {
-    stop("Number of outcome names must be equal to number of outcomes")
-  }
   #Set outcome colors
   if(is.null(outcome_colors)) {
-    outcome_colors <- palette(grDevices::hcl.colors(length(outcome_names), col_palette))
+    outcome_colors <- grDevices::hcl.colors(length(unique((dat2 %>%
+                                                             dplyr::filter(state != "(s0)"))$state)), "Dark 3")
   }
   #Make sure color palette exists
   if(!(col_palette %in% grDevices::hcl.pals())) {
@@ -80,20 +72,17 @@ ci_graph <- function(model_name, outcome_names=NULL, outcome_colors=NULL, col_pa
                   alpha = conf_int_alpha) +
       ggplot2::theme_classic() +  ggplot2::theme(legend.position="bottom") +
       ggplot2::labs(x = xlab_name, y = ylab_name) +
-      ggplot2::scale_color_manual(name = "Outcome", values = outcome_colors,
-                         labels = outcome_names) +
-      ggplot2::scale_fill_manual(name = "Outcome", values = outcome_colors,
-                        labels = outcome_names) +
+      ggplot2::scale_color_manual(name = "Outcome", values = outcome_colors) +
+      ggplot2::scale_fill_manual(name = "Outcome", values = outcome_colors) +
       ggplot2::theme(legend.position = "inside",
-                     legend.position.inside = c(0.15,0.9))
+                     legend.position.inside = c(0.15,0.8))
   } else {
    dat2 %>% dplyr::filter(state != "(s0)") %>% ggplot2::ggplot() +
       ggplot2::geom_step(ggplot2::aes(x = time, y = estimate, color = state)) +
       ggplot2::theme_classic() +  ggplot2::theme(legend.position="bottom") +
       ggplot2::labs(x = xlab_name, y = ylab_name) +
-      ggplot2::scale_color_manual(name = "Outcome", values = outcome_colors,
-                                  labels = outcome_names) +
+      ggplot2::scale_color_manual(name = "Outcome", values = outcome_colors) +
       ggplot2::theme(legend.position = "inside",
-                     legend.position.inside = c(0.15,0.9))
+                     legend.position.inside = c(0.15,0.8))
   }
 }

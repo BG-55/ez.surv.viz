@@ -6,7 +6,6 @@
 \usage{
 ci_graph(
   model_name,
-  outcome_names = NULL,
   outcome_colors = NULL,
   col_palette = "Dark 3",
   xlab_name = "Time",
@@ -17,8 +16,6 @@ ci_graph(
 }
 \arguments{
 \item{model_name}{A competing risks object of the class survfitms survfit}
-
-\item{outcome_names}{A vector of the outcome names, default is 1, 2, ... n}
 
 \item{outcome_colors}{A vector consisting of the color names/hexadecimals. Default is colors from Dark 3 palette}
 
