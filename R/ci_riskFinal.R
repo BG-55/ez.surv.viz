@@ -1,4 +1,6 @@
 #' Create risk tables for competing risks
+#' 
+#' @importFrom dplyr %>%
 #'
 #' @param model_name A competing risks object of the class survfitms survfit
 #'
