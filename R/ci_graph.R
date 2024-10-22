@@ -43,14 +43,14 @@ ci_graph <- function(model_name, outcome_colors=NULL, col_palette = "Dark 3",
   }
   #Tidy the the data
   dat2 <- broom::tidy(model_name)
-  #Set outcome colors
-  if(is.null(outcome_colors)) {
-    outcome_colors <- grDevices::hcl.colors(length(unique((dat2 %>%
-                                                             dplyr::filter(state != "(s0)"))$state)), "Dark 3")
-  }
   #Make sure color palette exists
   if(!(col_palette %in% grDevices::hcl.pals())) {
     stop("The color palette must be one of the hcl.pals()")
+  }
+  #Set outcome colors
+  if(is.null(outcome_colors)) {
+    outcome_colors <- grDevices::hcl.colors(length(unique((dat2 %>%
+                                                             dplyr::filter(state != "(s0)"))$state)), col_palette)
   }
   #Make conf_int correct
   if(conf_int != TRUE & conf_int != FALSE) {
@@ -67,21 +67,23 @@ ci_graph <- function(model_name, outcome_colors=NULL, col_palette = "Dark 3",
   #Make the plot
   if(conf_int == TRUE) {
     dat2 %>% dplyr::filter(state != "(s0)") %>% ggplot2::ggplot() +
-      ggplot2::geom_step(ggplot2::aes(x = time, y = estimate, color = state)) +
+      ggplot2::geom_step(ggplot2::aes(x = time, y = estimate, color = state, linetype = state)) +
       ggplot2::geom_ribbon(ggplot2::aes(x = time, y = estimate, fill = state, ymin = conf.low, ymax = conf.high),
                   alpha = conf_int_alpha) +
       ggplot2::theme_classic() +  ggplot2::theme(legend.position="bottom") +
       ggplot2::labs(x = xlab_name, y = ylab_name) +
       ggplot2::scale_color_manual(name = "Outcome", values = outcome_colors) +
       ggplot2::scale_fill_manual(name = "Outcome", values = outcome_colors) +
+      ggplot2::scale_linetype_discrete(name = "Outcome") +
       ggplot2::theme(legend.position = "inside",
                      legend.position.inside = c(0.15,0.8))
   } else {
    dat2 %>% dplyr::filter(state != "(s0)") %>% ggplot2::ggplot() +
-      ggplot2::geom_step(ggplot2::aes(x = time, y = estimate, color = state)) +
+      ggplot2::geom_step(ggplot2::aes(x = time, y = estimate, color = state, linetype = state)) +
       ggplot2::theme_classic() +  ggplot2::theme(legend.position="bottom") +
       ggplot2::labs(x = xlab_name, y = ylab_name) +
       ggplot2::scale_color_manual(name = "Outcome", values = outcome_colors) +
+      ggplot2::scale_linetype_discrete(name = "Outcome") +
       ggplot2::theme(legend.position = "inside",
                      legend.position.inside = c(0.15,0.8))
   }

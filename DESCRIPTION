@@ -1,6 +1,6 @@
 Package: ez.surv.viz
 Title: Easy Survival Analysis visualization
-Version: 0.0.1.1000
+Version: 0.0.1.2000
 Authors@R: 
     person("Ben", "Goldberg", , "Ben.Goldberg@childrens.harvard.edu", role = c("cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
@@ -10,3 +10,7 @@ License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

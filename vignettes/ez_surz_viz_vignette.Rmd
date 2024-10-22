@@ -1,0 +1,94 @@
+---
+title: "ez_surz_viz_vignette"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{ez_surz_viz_vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7
+)
+```
+
+## Introduction  
+
+We will use the following packages:  
+
+```{r setup, message=FALSE,warning=FALSE}
+library(survival)
+library(dplyr)
+library(ez.surv.viz)
+```
+
+We will use the Melanoma dataset from the MASS package. See `?MASS::Melanoma` for more information on this dataset.  
+
+```{r}
+Melanoma <- MASS::Melanoma
+```
+
+We will make the variable in the correct format for competing risks having it become a factor with "0" being a person who was censored, and values "1", "2"... "N" be values that correspond to the specific outcomes/risks. In this case, we are defining "0" as someone who is censored, "1" as someone who died of Melanoma and, "2" as someone who had died from other causes.  
+
+```{r}
+#Make the variable in the format for competing risks
+Melanoma2 <- 
+Melanoma %>% 
+mutate(status = as.factor(recode(status, `2` = 0, `1` = 1, `3` = 2)))
+```
+
+We will now make the status variable a labeled factor. This is suggested when using this package because the graphs and tables will use the labels given to the levels of the factor, thus, making the plots easier to interpret.  
+
+```{r}
+Melanoma2 <- Melanoma2 %>% mutate(status = factor(status,levels = c("0","1","2"),
+   labels = c("Censored","Melanoma","Other Causes")))
+```
+
+Finally we will define the model. This model will be unstratified. In the future, this package will work with strata as well, but for now only unstratified models will work. This package only works with models defined using `survfit` from the Survival package.
+
+```{r}
+ajfit <- survfit(Surv(time, status) ~1, data = Melanoma2)
+```
+
+### Making a Cumulative Incidence Plot  
+
+All that is needed to make the plot is a singular competing risks model from `survfit`  
+
+```{r}
+ci_graph(ajfit)
+```
+
+Colors can be changed and confidence intervals can be turned off as well.  
+
+```{r}
+ci_graph(ajfit, outcome_colors = c("red","blue"), conf_int = FALSE)
+```
+
+The color palette can also be changed as well. A palette can be any of the palettes from `hcl.pals()`. Running the function `hcl.pals()` will give you all the fun palettes that you can use.  
+
+```{r}
+ci_graph(ajfit, col_palette = "Green-Brown")
+```
+
+### Making a Risk Table For Competing Risks  
+
+All that is needed to make the table is a singular competing risks model from `survfit`. This table is a GGPlot object, so you can customize it as well. An important note is that the "Number at Risk" at any time corresponds to the number of people who had events before or at that time.  
+
+```{r}
+ci_risk(ajfit)
+```
+
+### Making a Combined Figure Using Patchwork 
+
+The Patchwork library is a powerful tool that allows users to combine GGPlot objects together into nice looking figures. This package can be used in tandem with ez.surv.viz to create a combined plot of the cumulative incidence plot, and its subsequent risk table.  
+
+```{r}
+library(patchwork)
+graph1 <- ci_graph(ajfit)
+table1 <- ci_risk(ajfit)
+graph1/table1 + plot_layout(heights = c(3,1))
+```
+
