@@ -6,6 +6,7 @@
 \usage{
 ci_graph(
   model_name,
+  line_size = 1,
   outcome_colors = NULL,
   col_palette = "Dark 3",
   xlab_name = "Time",
@@ -16,6 +17,8 @@ ci_graph(
 }
 \arguments{
 \item{model_name}{A competing risks object of the class survfitms survfit}
+
+\item{line_size}{A numeric containing the value of the line thickness. Default is 1.}
 
 \item{outcome_colors}{A vector consisting of the color names/hexadecimals. Default is colors from Dark 3 palette}
 

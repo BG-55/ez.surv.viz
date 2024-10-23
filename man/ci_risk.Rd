@@ -9,7 +9,7 @@ ci_risk(model_name, text_size = 4)
 \arguments{
 \item{model_name}{A competing risks object of the class survfitms survfit}
 
-\item{text_size}{The size of the text in the risk table}
+\item{text_size}{A numeric containing the size of the text in the risk table. Default is 4.}
 }
 \value{
 A GGPlot object with the risk table for competing risks

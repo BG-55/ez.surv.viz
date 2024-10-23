@@ -3,7 +3,7 @@
 #' @importFrom dplyr %>%
 #'
 #' @param model_name A competing risks object of the class survfitms survfit
-#' @param text_size The size of the text in the risk table
+#' @param text_size A numeric containing the size of the text in the risk table. Default is 4.
 #'
 #' @return A GGPlot object with the risk table for competing risks
 #' @export
