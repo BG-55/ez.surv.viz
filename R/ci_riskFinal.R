@@ -3,6 +3,7 @@
 #' @importFrom dplyr %>%
 #'
 #' @param model_name A competing risks object of the class survfitms survfit
+#' @param text_size The size of the text in the risk table
 #'
 #' @return A GGPlot object with the risk table for competing risks
 #' @export
@@ -23,7 +24,7 @@
 #' #Plot it
 #' ci_risk(ajfit)
 #' 
-ci_risk <- function(model_name) {
+ci_risk <- function(model_name, text_size = 4) {
   #Check if missing model
   if(missing(model_name)) {
     "You must input a survfit model for model_name"
@@ -86,7 +87,7 @@ dat3 <- dat3 %>% dplyr::mutate(csm = dplyr::case_when(
 
 ggplot2::ggplot(data = dat3,
                 ggplot2::aes(x=time,y=state2,label = ifelse(state == "Number At Risk",n.risk.new,csm))) + 
-  ggplot2::geom_text() +
+  ggplot2::geom_text(size = text_size) +
   ggplot2::scale_x_continuous(breaks = brks) +
   ggplot2::theme_classic()
 }

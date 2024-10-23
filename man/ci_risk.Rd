@@ -4,10 +4,12 @@
 \alias{ci_risk}
 \title{Create risk tables for competing risks}
 \usage{
-ci_risk(model_name)
+ci_risk(model_name, text_size = 4)
 }
 \arguments{
 \item{model_name}{A competing risks object of the class survfitms survfit}
+
+\item{text_size}{The size of the text in the risk table}
 }
 \value{
 A GGPlot object with the risk table for competing risks
