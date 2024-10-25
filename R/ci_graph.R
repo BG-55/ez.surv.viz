@@ -6,6 +6,7 @@
 #' @param line_size A numeric containing the value of the line thickness. Default is 1.
 #' @param outcome_colors A vector consisting of the color names/hexadecimals. Default is colors from Dark 3 palette
 #' @param col_palette A string containing the name of the hcl palette to use. See hcl.pals() for names. Default is Dark 3
+#' @param factor_order A vector of the outcomes in the order that the user wants them to be listed in the legend. First vector will be at the top, second will be after it and so on and so forth. Please be careful and only use with a labeled factor of outcomes.
 #' @param xlab_name Label for the x-axis. Default is "Time"
 #' @param ylab_name Label for the y-axis. Default is "Cumulative Incidence"
 #' @param conf_int Determines whether a confidence interval should be drawn for each curve. Default is TRUE.
@@ -31,6 +32,7 @@
 #' ci_graph(ajfit)
 #' 
 ci_graph <- function(model_name, line_size = 1, outcome_colors=NULL, col_palette = "Dark 3",
+                     factor_order = NULL,
                      xlab_name="Time",ylab_name="Cumlative Incidence", conf_int = TRUE,
                      conf_int_alpha = 0.2) {
   #Check if missing model
@@ -51,7 +53,7 @@ ci_graph <- function(model_name, line_size = 1, outcome_colors=NULL, col_palette
   #Set outcome colors
   if(is.null(outcome_colors)) {
     outcome_colors <- grDevices::hcl.colors(length(unique((dat2 %>%
-                                                             dplyr::filter(state != "(s0)"))$state)), col_palette)
+                                            dplyr::filter(state != "(s0)"))$state)), col_palette)
   }
   #Make conf_int correct
   if(conf_int != TRUE & conf_int != FALSE) {
@@ -64,6 +66,12 @@ ci_graph <- function(model_name, line_size = 1, outcome_colors=NULL, col_palette
   #Make sure its between 0 and 1
   if(conf_int_alpha > 1 | conf_int_alpha < 0) {
     stop("Alpha must be a number between 0 and 1")
+  }
+  #Make into a factor when told to
+  if(!is.null(factor_order)) {
+    new_fac <- c("(s0)")
+    new_fac <- c(new_fac,factor_order)
+    dat2$state <- factor(dat2$state, levels = new_fac, ordered = TRUE)
   }
   #Make the plot
   if(conf_int == TRUE) {

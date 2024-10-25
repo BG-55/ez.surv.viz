@@ -9,6 +9,7 @@ ci_graph(
   line_size = 1,
   outcome_colors = NULL,
   col_palette = "Dark 3",
+  factor_order = NULL,
   xlab_name = "Time",
   ylab_name = "Cumlative Incidence",
   conf_int = TRUE,
@@ -23,6 +24,8 @@ ci_graph(
 \item{outcome_colors}{A vector consisting of the color names/hexadecimals. Default is colors from Dark 3 palette}
 
 \item{col_palette}{A string containing the name of the hcl palette to use. See hcl.pals() for names. Default is Dark 3}
+
+\item{factor_order}{A vector of the outcomes in the order that the user wants them to be listed in the legend. First vector will be at the top, second will be after it and so on and so forth. Please be careful and only use with a labeled factor of outcomes.}
 
 \item{xlab_name}{Label for the x-axis. Default is "Time"}
 
