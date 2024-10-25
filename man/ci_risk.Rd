@@ -4,12 +4,24 @@
 \alias{ci_risk}
 \title{Create risk tables for competing risks}
 \usage{
-ci_risk(model_name, text_size = 4)
+ci_risk(
+  model_name,
+  factor_order = NULL,
+  text_size = 4,
+  xlab_name = "Time",
+  ylab_name = "State"
+)
 }
 \arguments{
 \item{model_name}{A competing risks object of the class survfitms survfit}
 
+\item{factor_order}{A vector of the outcomes in the order that the user wants them to be listed in the legend. First vector will be at the bottom, second will be above it and so on and so forth. Please be careful and only use with a labeled factor of outcomes.}
+
 \item{text_size}{A numeric containing the size of the text in the risk table. Default is 4.}
+
+\item{xlab_name}{Label for the x-axis. Default is "Time"}
+
+\item{ylab_name}{Label for the y-axis. Default is "State"}
 }
 \value{
 A GGPlot object with the risk table for competing risks

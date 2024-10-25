@@ -3,7 +3,10 @@
 #' @importFrom dplyr %>%
 #'
 #' @param model_name A competing risks object of the class survfitms survfit
+#' @param factor_order A vector of the outcomes in the order that the user wants them to be listed in the legend. First vector will be at the bottom, second will be above it and so on and so forth. Please be careful and only use with a labeled factor of outcomes.
 #' @param text_size A numeric containing the size of the text in the risk table. Default is 4.
+#' @param xlab_name Label for the x-axis. Default is "Time"
+#' @param ylab_name Label for the y-axis. Default is "State"
 #'
 #' @return A GGPlot object with the risk table for competing risks
 #' @export
@@ -24,7 +27,7 @@
 #' #Plot it
 #' ci_risk(ajfit)
 #' 
-ci_risk <- function(model_name, text_size = 4) {
+ci_risk <- function(model_name, factor_order = NULL, text_size = 4,xlab_name = "Time", ylab_name = "State") {
   #Check if missing model
   if(missing(model_name)) {
     "You must input a survfit model for model_name"
@@ -37,6 +40,7 @@ ci_risk <- function(model_name, text_size = 4) {
   
 dat2 <- broom::tidy(model_name) %>% dplyr::group_by(state) %>%
   dplyr::mutate(csm = cumsum(n.event))
+
 brks <- pretty(dat2$time)
 brks <- brks[brks <= max(dat2$time)]
 #Get values that are the closest to breakpoints but not past them
@@ -83,11 +87,17 @@ dat3 <- dat3 %>% dplyr::mutate(csm = dplyr::case_when(
   #at time zero.
   dplyr::mutate(n.risk.new = ifelse(time == min(time,na.rm = TRUE) & min(time, na.rm = TRUE) != 0,
                              n.risk,n.risk-1))
-
+#Make into a factor when told to
+if(!is.null(factor_order)) {
+new_fac <- c("Number At Risk")
+new_fac <- c(factor_order,new_fac)
+dat3$state2 <- factor(dat3$state2, levels = new_fac, ordered = TRUE)
+}
 
 ggplot2::ggplot(data = dat3,
                 ggplot2::aes(x=time,y=state2,label = ifelse(state == "Number At Risk",n.risk.new,csm))) + 
   ggplot2::geom_text(size = text_size) +
   ggplot2::scale_x_continuous(breaks = brks) +
+  ggplot2::labs(y=ylab_name, x = xlab_name) +
   ggplot2::theme_classic()
 }

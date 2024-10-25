@@ -73,6 +73,20 @@ The color palette can also be changed as well. A palette can be any of the palet
 ci_graph(ajfit, col_palette = "Green-Brown")
 ```
 
+The order of the outcomes in the legend can be modified as well. The default is alphabetical order.  
+
+```{r}
+ci_graph(ajfit, factor_order = c("Other Causes", "Melanoma"))
+```
+
+Since a GGPlot object is created, we can modify the plot like a normal GGPlot object. Here, we add a line at time 2000, and we change the x-axis scale breaks.
+
+```{r}
+library(ggplot2)
+ci_graph(ajfit, conf_int = FALSE) + geom_vline(xintercept = 2000) + scale_x_continuous(breaks = c(0,1000,2000,3000,4000,5000))
+```
+
+
 ### Making a Risk Table For Competing Risks  
 
 All that is needed to make the table is a singular competing risks model from `survfit`. This table is a GGPlot object, so you can customize it as well. An important note is that the "Number at Risk" at any time corresponds to the number of people who had events before or at that time.  
@@ -81,14 +95,30 @@ All that is needed to make the table is a singular competing risks model from `s
 ci_risk(ajfit)
 ```
 
+We can also adjust the the order of outcomes for the risk table. Remember that the first value in the vector always comes last on the table. Number at risk will always be on the top as well.  
+
+```{r}
+ci_risk(ajfit, factor_order = c("Other Causes", "Melanoma"))
+```
+
+Another feature is that since this is a GGPlot object, we can modify it as such. Here, we change the color of the tick marks to resemble the original graph.
+
+```{r}
+ci_risk(ajfit) + 
+  ggplot2::theme(axis.text.y = ggtext::element_markdown(colour = c(hcl.colors(2,palette = "Dark 3"),'black')))
+```
+
+
 ### Making a Combined Figure Using Patchwork 
 
 The Patchwork library is a powerful tool that allows users to combine GGPlot objects together into nice looking figures. This package can be used in tandem with ez.surv.viz to create a combined plot of the cumulative incidence plot, and its subsequent risk table.  
 
-```{r}
+```{r,fig.height=7}
 library(patchwork)
 graph1 <- ci_graph(ajfit)
-table1 <- ci_risk(ajfit)
-graph1/table1 + plot_layout(heights = c(3,1))
+table1 <- ci_risk(ajfit) + 
+  ggplot2::theme(axis.text.y = ggtext::element_markdown(colour = c(hcl.colors(2,palette = "Dark 3"),'black')))
+graph1/table1 + plot_layout(heights = c(3,1)) +
+  plot_annotation('This is a title',theme=ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.5)))
 ```
 
