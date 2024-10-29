@@ -2,4 +2,5 @@
 
 export(ci_graph)
 export(ci_risk)
+export(strat_ci_graph)
 importFrom(dplyr,"%>%")
