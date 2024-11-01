@@ -37,9 +37,8 @@ ci_risk <- function(model_name, factor_order = NULL, text_size = 4, xlab_name = 
   if(class(model_name)[1] != "survfitms" | class(model_name)[2] != "survfit") {
     stop("Model must be a competing risks model. See ?survfit.formula to see how to make that model")
   }
-  
   dat2 <- broom::tidy(model_name) %>% dplyr::group_by(state) %>%
-    dplyr::mutate(csm = cumsum(n.event))
+    dplyr::mutate(csm = cumsum(n.event)) 
   
   brks <- pretty(dat2$time)
   # brks <- brks[brks <= max(dat2$time)]
@@ -51,8 +50,9 @@ ci_risk <- function(model_name, factor_order = NULL, text_size = 4, xlab_name = 
     #The purpose of the second ifelse is to make sure that we don't end up with
     #two of the same times if there are no events past the second breakpoint
     minz <- c(minz,ifelse(i==0,min(dat2$time[dat2$time >= i]),
-                          ifelse(min(dat2$time[dat2$time >= 0]) == max(dat2$time[dat2$time <= i]),
-                                 min(dat2$time[dat2$time >= i]),max(dat2$time[dat2$time <= i]))))
+                          base::suppressWarnings(ifelse(min(dat2$time[dat2$time >= 0]) == max(dat2$time[dat2$time <= i]) |
+                                                          max(dat2$time[dat2$time <= i]) == -Inf,
+                                                        min(dat2$time[dat2$time >= i]),max(dat2$time[dat2$time <= i])))))
     #Create vector for this as well
     minz_past_point <- c(minz_past_point,
                          base::suppressWarnings(ifelse(min(dat2$time[dat2$time >= 0]) == max(dat2$time[dat2$time <= i]),
@@ -72,6 +72,29 @@ ci_risk <- function(model_name, factor_order = NULL, text_size = 4, xlab_name = 
       minz_past_point == TRUE ~ n.risk + 1,
       TRUE ~ n.risk
     ))
+  #Add zero row if no zero break
+  if(0 %in% brks == FALSE) {
+    #Add 0 into breaks
+    brks <- c(0,brks)
+    #Create zero row
+    all_state_here <- unique(dat3$state)
+    zero_row_data <- data.frame()
+    for (j in all_state_here) {
+      ifelse(j=="(s0)",zero_row_data <- rbind(zero_row_data,c(max(dat2$n.risk, na.rm = TRUE),0,"(s0)",0,TRUE)),
+             zero_row_data <- rbind(zero_row_data,c(0,0,j,0,TRUE)))
+    }
+    colnames(zero_row_data) <- c("n.risk","csm","state","time","art_zero")
+    zero_row_data$n.risk <- as.numeric(zero_row_data$n.risk)
+    zero_row_data$csm <- as.numeric(zero_row_data$csm)
+    zero_row_data$time <- as.numeric(zero_row_data$time)
+    dat3 <- dat3 %>% bind_rows(zero_row_data) %>% dplyr::mutate(art_zero = case_when(
+      is.na(art_zero) ~ "FALSE",
+      TRUE ~ art_zero
+    ))
+  } else {
+    dat3 <- dat3 %>% dplyr::mutate(art_zero = "FALSE")
+  }
+  
   #Set cumsum to zero for the non overall risk because no events actually happened at time 0
   #Unless there is an event actually at 0
   #Verified
@@ -88,14 +111,15 @@ ci_risk <- function(model_name, factor_order = NULL, text_size = 4, xlab_name = 
     #at time zero, we don't modify it because no events at time zero happened
     #and we want the total number of people at time zero unless an event happened
     #at time zero.
-    dplyr::mutate(n.risk.new = ifelse(time == min(time,na.rm = TRUE) & min(time, na.rm = TRUE) != 0,
-                                      n.risk,n.risk-1))
-#Make into a factor when told to
-if(!is.null(factor_order)) {
-new_fac <- c("Number At Risk")
-new_fac <- c(factor_order,new_fac)
-dat3$state2 <- factor(dat3$state2, levels = new_fac, ordered = TRUE)
-}
+    dplyr::mutate(n.risk.new =
+                    ifelse(time == min(time,na.rm = TRUE) & min(time, na.rm = TRUE) != 0 | art_zero == TRUE,
+                           n.risk,n.risk-1))
+  #Make into a factor when told to
+  if(!is.null(factor_order)) {
+    new_fac <- c("Number At Risk")
+    new_fac <- c(factor_order,new_fac)
+    dat3$state2 <- factor(dat3$state2, levels = new_fac, ordered = TRUE)
+  }
   #Verified
   #Set times to be equal to breaks 
   #Get unique times
@@ -104,10 +128,11 @@ dat3$state2 <- factor(dat3$state2, levels = new_fac, ordered = TRUE)
   vvvv <- c(bn=brks)
   #Column where the times correspond to the break times
   dat3$new_time <- vvvv[as.factor(dat3$time)]
-ggplot2::ggplot(data = dat3,
-                ggplot2::aes(x=new_time,y=state2,label = ifelse(state == "Number At Risk",n.risk.new,csm))) + 
-  ggplot2::geom_text(size = text_size) +
-  ggplot2::scale_x_continuous(breaks = brks) +
-  ggplot2::labs(y=ylab_name, x = xlab_name) +
-  ggplot2::theme_classic()
+  ggplot2::ggplot(data = dat3,
+                  ggplot2::aes(x=new_time,y=state2,label = ifelse(state == "Number At Risk",n.risk.new,csm))) + 
+    ggplot2::geom_text(size = 4) +
+    ggplot2::scale_x_continuous(breaks = brks) +
+    ggplot2::labs(y=ylab_name, x = xlab_name) +
+    ggplot2::theme_classic()
+  
 }

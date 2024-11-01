@@ -109,7 +109,7 @@ ci_risk(ajfit) +
 ```
 
 
-### Making a Combined Figure Using Patchwork 
+### Making a Combined Figure Using Patchwork  
 
 The Patchwork library is a powerful tool that allows users to combine GGPlot objects together into nice looking figures. This package can be used in tandem with ez.surv.viz to create a combined plot of the cumulative incidence plot, and its subsequent risk table.  
 
@@ -120,5 +120,27 @@ table1 <- ci_risk(ajfit) +
   ggplot2::theme(axis.text.y = ggtext::element_markdown(colour = c(hcl.colors(2,palette = "Dark 3"),'black')))
 graph1/table1 + plot_layout(heights = c(3,1)) +
   plot_annotation('This is a title',theme=ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.5)))
+```
+
+### Stratified Analysis  
+
+ez.surv.viz can also make stratified graphs. To do so, we can first setup a simple stratified model where sex is the stratifying variable.  
+
+```{r}
+Melanoma2 <- 
+  Melanoma %>% 
+  mutate(status = as.factor(recode(status, `2` = 0, `1` = 1, `3` = 2)))
+#Make the status a labeled factor
+Melanoma2 <- Melanoma2 %>% mutate(status = factor(status,levels = c("0","1","2"),
+                                                  labels = c("Censored","Melanoma","Other Causes"))) %>%
+  mutate(sex = factor(sex,levels = c("0","1"), labels = c("Female","Male")))
+#Define the model
+ajfit <- survfit(Surv(time, status) ~sex, data = Melanoma2)
+```
+
+Then, we can simply plot the cumulative incidence using the `strat_ci_graph` function with our new stratified model. This function has the same features as `ci_graph` outside of being able to change the order of the outcomes in the graph.  
+
+```{r}
+strat_ci_graph(ajfit)
 ```
 

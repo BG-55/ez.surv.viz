@@ -51,8 +51,8 @@ strat_ci_graph <- function(model_name, line_size = 1, outcome_colors = NULL, col
   }
   #Define the data and tidy the data
   dat2 <- broom::tidy(model_name) %>%
-    mutate(nice_strat = sub('.*=', '', strata)) %>%
-    mutate(strata_state = paste(paste0(nice_strat,":"),state))
+    dplyr::mutate(nice_strat = sub('.*=', '', strata)) %>%
+    dplyr::mutate(strata_state = paste(paste0(nice_strat,":"),state))
   
   if(!(col_palette %in% grDevices::hcl.pals())) {
     stop("The color palette must be one of the hcl.pals()")
