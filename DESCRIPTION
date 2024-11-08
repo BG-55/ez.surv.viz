@@ -1,6 +1,6 @@
 Package: ez.surv.viz
 Title: Easy Survival Analysis visualization
-Version: 0.0.1.3000
+Version: 0.0.1.3100
 Authors@R: 
     person("Ben", "Goldberg", , "Ben.Goldberg@childrens.harvard.edu", role = c("cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))

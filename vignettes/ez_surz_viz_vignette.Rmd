@@ -144,3 +144,6 @@ Then, we can simply plot the cumulative incidence using the `strat_ci_graph` fun
 strat_ci_graph(ajfit)
 ```
 
+### Building Survival Tables  
+
+To go along with our figures, we can create tables of estimates from our survival analysis.

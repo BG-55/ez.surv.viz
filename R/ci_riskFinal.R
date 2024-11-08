@@ -111,6 +111,7 @@ ci_risk <- function(model_name, factor_order = NULL, text_size = 4, xlab_name = 
     #at time zero, we don't modify it because no events at time zero happened
     #and we want the total number of people at time zero unless an event happened
     #at time zero.
+    #Maybe change to sum of n.censor + n.event?
     dplyr::mutate(n.risk.new =
                     ifelse(time == min(time,na.rm = TRUE) & min(time, na.rm = TRUE) != 0 | art_zero == TRUE,
                            n.risk,n.risk-1))
