@@ -16,7 +16,8 @@ tbl_surv_to_flex(
   footnote_font_size = 9,
   missing_value_replace = "—",
   border_color = "#D3D3D3",
-  header_alignment = "center"
+  header_alignment = "center",
+  table_layout_type = "autofit"
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ tbl_surv_to_flex(
 \item{border_color}{A character the defines the the color of the borders in the table. Default is #D3D3D3.}
 
 \item{header_alignment}{A character value that is either 'left', 'right', 'center', or 'justify' that defines the alignment of the headers.}
+
+\item{table_layout_type}{A charatcer value that is either 'fixed' or 'autofit' to determine the layour of the table. Default is 'autofit'}
 }
 \value{
 A flextable object with the results of the tbl_survfit, tbl_cuminc or a  list of tbl_survfits

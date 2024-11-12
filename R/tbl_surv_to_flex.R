@@ -14,6 +14,7 @@
 #' @param missing_value_replace A character that defines what values will replace missing values in the table. Example when the survival never gets below 50%, the median survival is missing. Default is "—".
 #' @param border_color A character the defines the the color of the borders in the table. Default is #D3D3D3.
 #' @param header_alignment A character value that is either 'left', 'right', 'center', or 'justify' that defines the alignment of the headers.
+#' @param table_layout_type A charatcer value that is either 'fixed' or 'autofit' to determine the layour of the table. Default is 'autofit'
 #'
 #' @return A flextable object with the results of the tbl_survfit, tbl_cuminc or a  list of tbl_survfits
 #' @export
@@ -53,7 +54,7 @@ tbl_surv_to_flex <- function(table_name, label_names = NULL, label_header_names 
                                 title_font_size = 12,
                                 table_footnote = "", footnote_font_size = 9,
                                 missing_value_replace = "—", border_color = "#D3D3D3",
-                                header_alignment = "center") {
+                                header_alignment = "center", table_layout_type = "autofit") {
 
   #In case wrong table type
   if(class(table_name)[1] != "tbl_survfit" & class(table_name)[1] != "list" &
@@ -122,7 +123,7 @@ table_name <- lapply(table_name, function(x) gtsummary::as_tibble(x)) %>%
     flextable::fontsize(size = text_font_size, part = "header") %>%
     #Title is always first header row
     flextable::fontsize(size = title_font_size, i = 1, part = "header") %>%
-    flextable::set_table_properties(layout = "autofit") %>%
+    flextable::set_table_properties(layout = table_layout_type) %>%
     flextable::add_footer_lines(table_footnote) %>%
     flextable::fontsize(size = footnote_font_size, part = "footer") %>%
     flextable::bold(part = 'header', i = 1, bold = bold_title)  %>%
