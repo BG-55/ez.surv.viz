@@ -105,16 +105,18 @@ ci_risk <- function(model_name, factor_order = NULL, text_size = 4, xlab_name = 
     dplyr::mutate(state2 = factor(state, levels = c(dat3 %>%
                                                       dplyr::filter(state != "Number At Risk") %>%
                                                       dplyr::pull(.,state) %>% base::unique(.),"Number At Risk"),
-                                  ordered = TRUE)) %>%
+                                  ordered = TRUE))
     #The purpose of this is to subtract the person that had the event at that time
     #from the number of people at risk at that time. For zero, unless there is an an event
     #at time zero, we don't modify it because no events at time zero happened
     #and we want the total number of people at time zero unless an event happened
     #at time zero.
     #Maybe change to sum of n.censor + n.event?
-    dplyr::mutate(n.risk.new =
+  dat3 <- dat3 %>%  dplyr::mutate(n.risk.new =
                     ifelse(time == min(time,na.rm = TRUE) & min(time, na.rm = TRUE) != 0 | art_zero == TRUE,
-                           n.risk,n.risk-1))
+                           n.risk,n.risk-((dat3 %>% dplyr::group_by(time) %>%
+                                             dplyr::summarise(all_s = sum(n.event+n.censor, na.rm = TRUE)) %>%
+                                             dplyr::filter(time == time) %>% dplyr::pull(.,all_s)))))
   #Make into a factor when told to
   if(!is.null(factor_order)) {
     new_fac <- c("Number At Risk")

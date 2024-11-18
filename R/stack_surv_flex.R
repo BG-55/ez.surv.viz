@@ -58,7 +58,7 @@ stack_surv_flex <- function(table_list, label_names = NULL, label_header_names =
   #Bind all the dataframes together
   table_list_new <- data.frame()
   for (z in 1:length(table_list)) {
-    table_list_new <- rbind(table_list_new, test_l[[z]][['body']][['dataset']])
+    table_list_new <- rbind(table_list_new, table_list[[z]][['body']][['dataset']])
   }
   #Make the output table
   table_list_new <- table_list_new %>%
