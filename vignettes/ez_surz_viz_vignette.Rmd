@@ -1,6 +1,9 @@
 ---
-title: "ez_surz_viz_vignette"
-output: rmarkdown::html_vignette
+title: "ez_surz_viz Vignette"
+output:
+  rmarkdown::html_vignette:
+      toc: true
+      number_sections: true
 vignette: >
   %\VignetteIndexEntry{ez_surz_viz_vignette}
   %\VignetteEngine{knitr::rmarkdown}
@@ -53,7 +56,8 @@ Finally we will define the model. This model will be unstratified. In the future
 ajfit <- survfit(Surv(time, status) ~1, data = Melanoma2)
 ```
 
-### Making a Cumulative Incidence Plot  
+
+## Making a Cumulative Incidence Plot  
 
 All that is needed to make the plot is a singular competing risks model from `survfit`  
 
@@ -87,7 +91,7 @@ ci_graph(ajfit, conf_int = FALSE) + geom_vline(xintercept = 2000) + scale_x_cont
 ```
 
 
-### Making a Risk Table For Competing Risks  
+## Making a Risk Table For Competing Risks  
 
 All that is needed to make the table is a singular competing risks model from `survfit`. This table is a GGPlot object, so you can customize it as well. An important note is that the "Number at Risk" at any time corresponds to the number of people who had events before or at that time.  
 
@@ -109,7 +113,7 @@ ci_risk(ajfit) +
 ```
 
 
-### Making a Combined Figure Using Patchwork  
+## Making a Combined Figure Using Patchwork  
 
 The Patchwork library is a powerful tool that allows users to combine GGPlot objects together into nice looking figures. This package can be used in tandem with ez.surv.viz to create a combined plot of the cumulative incidence plot, and its subsequent risk table.  
 
@@ -122,7 +126,7 @@ graph1/table1 + plot_layout(heights = c(3,1)) +
   plot_annotation('This is a title',theme=ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.5)))
 ```
 
-### Stratified Analysis  
+## Stratified Analysis  
 
 ez.surv.viz can also make stratified graphs. To do so, we can first setup a simple stratified model where sex is the stratifying variable.  
 
@@ -144,6 +148,68 @@ Then, we can simply plot the cumulative incidence using the `strat_ci_graph` fun
 strat_ci_graph(ajfit)
 ```
 
-### Building Survival Tables  
+## Building Survival Tables  
 
-To go along with our figures, we can create tables of estimates from our survival analysis.
+To go along with our figures, we can create tables of estimates from our survival analysis. In this example, we used stratified survival analysis to create the table. We change a few of the variable names. "Maintained" becomes "New Maintain", "x" becomes "New Name". We also change the header times. "Time 10" becomes "New Time Name" and "Median Survival" becomes "The Median Survival Time". Furthermore, we change missing values to say "NR" rather than "-". Our output is this fully formatted flextable that can be customized using other flextable functions.
+
+```{r}
+fit2 <- survival::survfit(survival::Surv(time, status) ~ x, data = survival::aml)
+med_surv2 <- gtsummary::tbl_survfit(fit2, probs = 0.5, label_header = "Median Survial")
+#We can change the missing values for the upper confidence intervals to something else
+tbl_surv_to_flex(med_surv2, missing_value_replace = "NR", table_title = "Stratified Analysis")
+#Create a times table as well
+times2 <- gtsummary::tbl_survfit(fit2, times = c(10,25,50))
+#We can change the label and headers
+tbl_surv_to_flex(list(med_surv2,times2), missing_value_replace = "NR", table_title = "Stratified Analysis",
+                   label_names = c("Maintained" = "New Maintain", "x" = "New Name"),
+                   label_header_names = c("Time 10" = "New Time Name",
+                                          "Median Survial" = "The Median Survival Time"))
+```
+
+### Stacking Survival Tables  
+
+Often times when doing multiple model, we want to combine our tables of estimates into a singular table. We can use `stack_surv_flex` to do so. In this example, we define a stratified and unstratified model as below.  
+
+```{r}
+Melanoma <- MASS::Melanoma
+library(survival)
+library(dplyr)
+Melanoma2 <- 
+  Melanoma %>% 
+  mutate(status = as.factor(recode(status, `2` = 0, `1` = 1, `3` = 2)))
+#Make the status a labeled factor
+Melanoma2 <- Melanoma2 %>% mutate(status = factor(status,levels = c("0","1","2"),
+                                                  labels = c("Censored","Melanoma","Other Causes"))) %>%
+  mutate(sex = factor(sex,levels = c("0","1"), labels = c("Female","Male")))
+
+#Fit the models
+ajfit <- survfit(Surv(time, status) ~1, data = Melanoma2)
+ajfit_strata <- survfit(Surv(time, status) ~sex, data = Melanoma2)
+```
+
+Then, we create the GTSummary tables of times for our estimates.  
+
+```{r}
+#Create the tables for the specfic times
+times2 <- gtsummary::tbl_survfit(ajfit, times = c(1000,2000,3000))
+times2_strata  <- gtsummary::tbl_survfit(ajfit_strata, times = c(1000,2000,3000))
+```
+
+Next, we use `tbl_surv_to_flex` to create our flextables for our models, and we put them in a list.  
+
+```{r}
+#Use the tbl_surv_to_flex function
+xv <- ez.surv.viz::tbl_surv_to_flex(times2)
+xv_strat <- ez.surv.viz::tbl_surv_to_flex(times2_strata)
+
+#Combine in a list
+comb_list <- list(xv,xv_strat)
+```
+
+Finally, we use the function `stack_surv_flex` to stack the tables. The first table in the list goes at the top of table, then the next table, and so on and so forth. We also change the variable name "Overall" to "All People"
+
+```{r}
+stack_surv_flex(comb_list, label_names = c("Overall" = "All People"))
+```
+
+Unfortunately, if you are combining several cumulative incidence models in one table that are unstratified, they will all have the variable name, "Overall". In order to change the variable names, you must use `flextable::compose`.
