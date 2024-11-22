@@ -14,6 +14,8 @@
 #' @param legend_text_size A number that determines the size of the text in the legend. Default is 10.
 #' @param legend_title_text_size A number that determines the size of the title in the legend. Default is 12.
 #' @param legend_size A number that determines the size of the legend in centimeters. Default is 0.5.
+#' @param legend_pos_x A number the determines the x position of the legend inside the graph. Default is 0.15
+#' @param legend_pos_y A number the determines the y position of the legend inside the graph. Default is 0.8
 #'
 #' @return A GGPlot object with the graph of the cumulative incidence curves
 #' @export
@@ -37,7 +39,8 @@
 ci_graph <- function(model_name, line_size = 1, outcome_colors=NULL, col_palette = "Dark 3",
                      factor_order = NULL,
                      xlab_name="Time",ylab_name="Cumlative Incidence", conf_int = TRUE,
-    conf_int_alpha = 0.2, legend_text_size = 10, legend_title_text_size = 12, legend_size = 0.5) {
+    conf_int_alpha = 0.2, legend_text_size = 10, legend_title_text_size = 12, legend_size = 0.5,
+    legend_pos_x = 0.15,legend_pos_y = 0.8) {
   #Check if missing model
   if(missing(model_name)) {
     "You must input a survfit model for model_name"
@@ -89,7 +92,7 @@ ci_graph <- function(model_name, line_size = 1, outcome_colors=NULL, col_palette
       ggplot2::scale_fill_manual(name = "Outcome", values = outcome_colors) +
       ggplot2::scale_linetype_discrete(name = "Outcome") +
       ggplot2::theme(legend.position = "inside",
-                     legend.position.inside = c(0.15,0.8),
+                     legend.position.inside = c(legend_pos_x,legend_pos_y),
                      legend.title = ggplot2::element_text(size = legend_title_text_size), 
                      legend.text = ggplot2::element_text(size = legend_text_size),
                      legend.key.size = grid::unit(legend_size, 'cm'))
@@ -102,7 +105,7 @@ ci_graph <- function(model_name, line_size = 1, outcome_colors=NULL, col_palette
       ggplot2::scale_color_manual(name = "Outcome", values = outcome_colors) +
       ggplot2::scale_linetype_discrete(name = "Outcome") +
       ggplot2::theme(legend.position = "inside",
-                     legend.position.inside = c(0.15,0.8),
+                     legend.position.inside = c(legend_pos_x,legend_pos_y),
                      legend.title = ggplot2::element_text(size = legend_title_text_size), 
                      legend.text = ggplot2::element_text(size = legend_text_size),
                      legend.key.size = grid::unit(legend_size, 'cm'))

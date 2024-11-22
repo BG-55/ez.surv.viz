@@ -16,7 +16,9 @@ ci_graph(
   conf_int_alpha = 0.2,
   legend_text_size = 10,
   legend_title_text_size = 12,
-  legend_size = 0.5
+  legend_size = 0.5,
+  legend_pos_x = 0.15,
+  legend_pos_y = 0.8
 )
 }
 \arguments{
@@ -43,6 +45,10 @@ ci_graph(
 \item{legend_title_text_size}{A number that determines the size of the title in the legend. Default is 12.}
 
 \item{legend_size}{A number that determines the size of the legend in centimeters. Default is 0.5.}
+
+\item{legend_pos_x}{A number the determines the x position of the legend inside the graph. Default is 0.15}
+
+\item{legend_pos_y}{A number the determines the y position of the legend inside the graph. Default is 0.8}
 }
 \value{
 A GGPlot object with the graph of the cumulative incidence curves
