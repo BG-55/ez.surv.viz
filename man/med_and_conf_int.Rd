@@ -2,32 +2,38 @@
 % Please edit documentation in R/med_and_conf_int.R
 \name{med_and_conf_int}
 \alias{med_and_conf_int}
-\title{Print text of the median survival value and its subsuquent 95\% confidence interval}
+\title{Print text of the median survival value and its subsequent 95\% confidence interval}
 \usage{
 med_and_conf_int(
   model_name,
   digits_all = 1,
   digits_med = NULL,
   digits_ci = NULL,
-  unit_text = ""
+  unit_text = "",
+  between_strata_char = " ",
+  between_strata_and_med_text = "the median survival time is"
 )
 }
 \arguments{
-\item{model_name}{the unstratified survival model}
+\item{model_name}{the survival model.}
 
-\item{digits_all}{number of digits to round the median and CI too}
+\item{digits_all}{number of digits to round the median and CI too.}
 
-\item{digits_med}{number of digits to round mean to. Must specify digits_ci}
+\item{digits_med}{number of digits to round mean to. Must specify digits_ci .}
 
-\item{digits_ci}{number of digits to round CI to. Must specify digits_med}
+\item{digits_ci}{number of digits to round CI to. Must specify digits_med.}
 
 \item{unit_text}{unit for the median survival. Comes right after the median in the text.}
+
+\item{between_strata_char}{a character that separates the median and CI for each strata, Default is a space. Only for stratified models.}
+
+\item{between_strata_and_med_text}{text in between strata name and median survival time. Default is, "the median survival time is".}
 }
 \value{
-text with the median survival value and its subsuquent 95\% confidence interval
+text with the median survival value and its subsequent 95\% confidence interval
 }
 \description{
-Print text of the median survival value and its subsuquent 95\% confidence interval
+Print text of the median survival value and its subsequent 95\% confidence interval
 }
 \examples{
 fit <- survival::survfit(survival::Surv(time, status) ~ 1, data = survival::aml)
