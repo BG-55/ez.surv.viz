@@ -3,6 +3,7 @@
 export(ci_graph)
 export(ci_risk)
 export(med_and_conf_int)
+export(med_and_range)
 export(stack_surv_flex)
 export(strat_ci_graph)
 export(tbl_surv_to_flex)

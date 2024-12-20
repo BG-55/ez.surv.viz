@@ -10,8 +10,7 @@ med_and_conf_int(
   digits_med = NULL,
   digits_ci = NULL,
   unit_text = "",
-  between_strata_char = " ",
-  between_strata_and_med_text = "the median survival time is"
+  print_result = TRUE
 )
 }
 \arguments{
@@ -24,10 +23,6 @@ med_and_conf_int(
 \item{digits_ci}{number of digits to round CI to. Must specify digits_med.}
 
 \item{unit_text}{unit for the median survival. Comes right after the median in the text.}
-
-\item{between_strata_char}{a character that separates the median and CI for each strata, Default is a space. Only for stratified models.}
-
-\item{between_strata_and_med_text}{text in between strata name and median survival time. Default is, "the median survival time is".}
 }
 \value{
 text with the median survival value and its subsequent 95\% confidence interval
