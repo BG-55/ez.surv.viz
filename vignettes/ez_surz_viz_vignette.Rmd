@@ -168,7 +168,7 @@ tbl_surv_to_flex(list(med_surv2,times2), missing_value_replace = "NR", table_tit
 
 ### Stacking Survival Tables  
 
-Often times when doing multiple model, we want to combine our tables of estimates into a singular table. We can use `stack_surv_flex` to do so. In this example, we define a stratified and unstratified model as below.  
+Often times when doing multiple models, we want to combine our tables of estimates into a singular table. We can use `stack_surv_flex` to do so. In this example, we define a stratified and unstratified model as below.  
 
 ```{r}
 Melanoma <- MASS::Melanoma
@@ -212,4 +212,44 @@ Finally, we use the function `stack_surv_flex` to stack the tables. The first ta
 stack_surv_flex(comb_list, label_names = c("Overall" = "All People"))
 ```
 
-Unfortunately, if you are combining several cumulative incidence models in one table that are unstratified, they will all have the variable name, "Overall". In order to change the variable names, you must use `flextable::compose`.
+Unfortunately, if you are combining several cumulative incidence models in one table that are unstratified, they will all have the variable name, "Overall". In order to change the variable names, you must use `flextable::compose`.  
+
+## Timepoint Plots  
+
+Timepoint plots are a way to easily visualize your subject's journey in the study over time and see which events they have been affected by. In this example dataframe, we have a column called `"subj_id"`, which gives our three subjects a unique identifier. We have columns `e_1` through `e_5`, which have the time that the subject had the event or NA if they did not have an event. Also, there is column `e_1_2` which gives the time for subjects who had an "e_1" event for the second time. Finally, we have column `e_6_at_8`. This is a column that gives the subject's count of a variable at time 8. For example subject 1 has a count of 4 at time 8, subject 2 has a count of 6, and subject 3 has a count of 9. We will talk more about this column later.  
+
+```{r}
+toyx <- data.frame(subj_id = c("1","2","3"), e_1 = c(1,4,8), e_1_2 = c(3,8,NA), e_2 = c(NA,6,NA),
+                  e_3 = c(4,NA,6), e_4 = c(2,10,NA),
+                  e_5 = c(10,12,14), e_6_at_8 = c(4,6,9))
+```
+
+The first thing we must do is combine the columns `e_1` and `e_1_2` into a singular column called `e_1`. The purpose of this is so the function can credit the subject for having two "e_1" events, instead of thinking `e_1` and `e_1_2` are separate events from each other. This is easy to do using `pivot_longer`.  
+```{r}
+toyx_new <- toyx %>% tidyr::pivot_longer(cols = c(e_1,e_1_2), names_to = NULL, values_to = 'e_1')
+```
+
+Now we can use our function to create our plot. We must exclude column `e_6_at_8` from our function because that column consists of counts at a specific time rather than the time of an event. We will add it in to the plot later. We make sure to specify the `id` argument to be `"subj_id"` because our id column is named subj_id and not id. The purpose of `base::suppressWarnings(print())` is to remove erroneous error messages that occur because of missing events having NA values.  
+
+```{r}
+base::suppressWarnings(print(timepoint_plot(toyx_new %>% dplyr::select(-c(e_6_at_8)), id = "subj_id")))
+```
+
+Lets change the event names and make some other fun customizations. To change event names, you can change the column names of the events.  
+
+```{r}
+toyx_new_2 <- toyx_new %>% dplyr::rename("Event 1" = e_1, "Event 2" = e_2, "Cancer" = e_3, "Common Cold" = e_4, "Flu" = e_5)
+
+base::suppressWarnings(print(timepoint_plot(toyx_new_2 %>% dplyr::select(-c(e_6_at_8)), id = "subj_id", col_palette = "Viridis",
+               xlab_name = "Years", point_size = 4, line_size = 1)))
+```
+
+Finally, we can add `e_6_at_8` to our plot. Remember that this column is the counts of a variable at time 8. In this example, we will show a triangle at time 8 if the count is greater than 5. We make sure to rename the "subj_id" column to "id" in our new `geom_point` code because our function considers the y aesthetic to be called "id" always. This is a must-do.  
+
+```{r}
+base::suppressWarnings(print(timepoint_plot(toyx_new_2 %>% dplyr::select(-c(e_6_at_8)), id = "subj_id") +
+  geom_point(data = toyx_new_2 %>% rename(id = "subj_id"),
+             aes(x = case_when(e_6_at_8 < 5 ~ NA, TRUE ~ 8)),shape = 25, size = 3,
+             position = position_nudge(y = 0.19))))
+```
+
