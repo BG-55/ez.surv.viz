@@ -1,5 +1,5 @@
 #' Create cumulative incidence plots
-#' 
+#'
 #' @importFrom dplyr %>%
 #'
 #' @param model_name A competing risks object of the class survfitms survfit
@@ -9,6 +9,7 @@
 #' @param factor_order A vector of the outcomes in the order that the user wants them to be listed in the legend. First vector will be at the top, second will be after it and so on and so forth. Please be careful and only use with a labeled factor of outcomes.
 #' @param xlab_name Label for the x-axis. Default is "Time"
 #' @param ylab_name Label for the y-axis. Default is "Cumulative Incidence"
+#' @param legend_name Lbael for the legend. Defauly is "Outcome"
 #' @param conf_int Determines whether a confidence interval should be drawn for each curve. Default is TRUE.
 #' @param conf_int_alpha A value between 0 and 1 that determines the alpha of the ribbon confidence interval
 #' @param legend_text_size A number that determines the size of the text in the legend. Default is 10.
@@ -25,8 +26,8 @@
 #' library(survival)
 #' library(dplyr)
 #' #Make the variable in the format for competing risks
-#' Melanoma2 <- 
-#' Melanoma %>% 
+#' Melanoma2 <-
+#' Melanoma %>%
 #' mutate(status = as.factor(recode(status, `2` = 0, `1` = 1, `3` = 2)))
 #' #Make the status a labeled factor
 #' Melanoma2 <- Melanoma2 %>% mutate(status = factor(status,levels = c("0","1","2"),
@@ -35,10 +36,10 @@
 #' ajfit <- survfit(Surv(time, status) ~1, data = Melanoma2)
 #' #Plot it
 #' ci_graph(ajfit)
-#' 
+#'
 ci_graph <- function(model_name, line_size = 1, outcome_colors=NULL, col_palette = "Dark 3",
                      factor_order = NULL,
-                     xlab_name="Time",ylab_name="Cumlative Incidence", conf_int = TRUE,
+                     xlab_name="Time",ylab_name="Cumlative Incidence", legend_name ="Outcome", conf_int = TRUE,
     conf_int_alpha = 0.2, legend_text_size = 10, legend_title_text_size = 12, legend_size = 0.5,
     legend_pos_x = 0.15,legend_pos_y = 0.8) {
   #Check if missing model
@@ -88,12 +89,12 @@ ci_graph <- function(model_name, line_size = 1, outcome_colors=NULL, col_palette
                   alpha = conf_int_alpha) +
       ggplot2::theme_classic() +  ggplot2::theme(legend.position="bottom") +
       ggplot2::labs(x = xlab_name, y = ylab_name) +
-      ggplot2::scale_color_manual(name = "Outcome", values = outcome_colors) +
-      ggplot2::scale_fill_manual(name = "Outcome", values = outcome_colors) +
-      ggplot2::scale_linetype_discrete(name = "Outcome") +
+      ggplot2::scale_color_manual(name = legend_name, values = outcome_colors) +
+      ggplot2::scale_fill_manual(name = legend_name, values = outcome_colors) +
+      ggplot2::scale_linetype_discrete(name = legend_name) +
       ggplot2::theme(legend.position = "inside",
                      legend.position.inside = c(legend_pos_x,legend_pos_y),
-                     legend.title = ggplot2::element_text(size = legend_title_text_size), 
+                     legend.title = ggplot2::element_text(size = legend_title_text_size),
                      legend.text = ggplot2::element_text(size = legend_text_size),
                      legend.key.size = grid::unit(legend_size, 'cm'))
   } else {
@@ -102,11 +103,11 @@ ci_graph <- function(model_name, line_size = 1, outcome_colors=NULL, col_palette
                          size = line_size) +
       ggplot2::theme_classic() +  ggplot2::theme(legend.position="bottom") +
       ggplot2::labs(x = xlab_name, y = ylab_name) +
-      ggplot2::scale_color_manual(name = "Outcome", values = outcome_colors) +
-      ggplot2::scale_linetype_discrete(name = "Outcome") +
+      ggplot2::scale_color_manual(name = legend_name, values = outcome_colors) +
+      ggplot2::scale_linetype_discrete(name = legend_name) +
       ggplot2::theme(legend.position = "inside",
                      legend.position.inside = c(legend_pos_x,legend_pos_y),
-                     legend.title = ggplot2::element_text(size = legend_title_text_size), 
+                     legend.title = ggplot2::element_text(size = legend_title_text_size),
                      legend.text = ggplot2::element_text(size = legend_text_size),
                      legend.key.size = grid::unit(legend_size, 'cm'))
   }

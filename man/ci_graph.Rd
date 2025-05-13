@@ -12,6 +12,7 @@ ci_graph(
   factor_order = NULL,
   xlab_name = "Time",
   ylab_name = "Cumlative Incidence",
+  legend_name = "Outcome",
   conf_int = TRUE,
   conf_int_alpha = 0.2,
   legend_text_size = 10,
@@ -35,6 +36,8 @@ ci_graph(
 \item{xlab_name}{Label for the x-axis. Default is "Time"}
 
 \item{ylab_name}{Label for the y-axis. Default is "Cumulative Incidence"}
+
+\item{legend_name}{Lbael for the legend. Defauly is "Outcome"}
 
 \item{conf_int}{Determines whether a confidence interval should be drawn for each curve. Default is TRUE.}
 
@@ -61,8 +64,8 @@ Melanoma <- MASS::Melanoma
 library(survival)
 library(dplyr)
 #Make the variable in the format for competing risks
-Melanoma2 <- 
-Melanoma \%>\% 
+Melanoma2 <-
+Melanoma \%>\%
 mutate(status = as.factor(recode(status, `2` = 0, `1` = 1, `3` = 2)))
 #Make the status a labeled factor
 Melanoma2 <- Melanoma2 \%>\% mutate(status = factor(status,levels = c("0","1","2"),
