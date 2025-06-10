@@ -9,7 +9,8 @@ ci_risk(
   factor_order = NULL,
   text_size = 4,
   xlab_name = "Time",
-  ylab_name = "State"
+  ylab_name = "State",
+  remove_at_time = FALSE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ ci_risk(
 \item{xlab_name}{Label for the x-axis. Default is "Time"}
 
 \item{ylab_name}{Label for the y-axis. Default is "State"}
+
+\item{remove_at_time}{Boolean to check if the user wants to people who have the event at the time on a breakpoint to be removed from the number at risk or not. Default is FALSE}
 }
 \value{
 A GGPlot object with the risk table for competing risks
@@ -34,8 +37,8 @@ Melanoma <- MASS::Melanoma
 library(survival)
 library(dplyr)
 #Make the variable in the format for competing risks
-Melanoma2 <- 
-Melanoma \%>\% 
+Melanoma2 <-
+Melanoma \%>\%
 mutate(status = as.factor(recode(status, `2` = 0, `1` = 1, `3` = 2)))
 #Make the status a labeled factor
 Melanoma2 <- Melanoma2 \%>\% mutate(status = factor(status,levels = c("0","1","2"),

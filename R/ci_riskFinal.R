@@ -1,5 +1,5 @@
 #' Create risk tables for competing risks
-#' 
+#'
 #' @importFrom dplyr %>%
 #'
 #' @param model_name A competing risks object of the class survfitms survfit
@@ -7,6 +7,7 @@
 #' @param text_size A numeric containing the size of the text in the risk table. Default is 4.
 #' @param xlab_name Label for the x-axis. Default is "Time"
 #' @param ylab_name Label for the y-axis. Default is "State"
+#' @param remove_at_time Boolean to check if the user wants to people who have the event at the time on a breakpoint to be removed from the number at risk or not. Default is FALSE
 #'
 #' @return A GGPlot object with the risk table for competing risks
 #' @export
@@ -16,8 +17,8 @@
 #' library(survival)
 #' library(dplyr)
 #' #Make the variable in the format for competing risks
-#' Melanoma2 <- 
-#' Melanoma %>% 
+#' Melanoma2 <-
+#' Melanoma %>%
 #' mutate(status = as.factor(recode(status, `2` = 0, `1` = 1, `3` = 2)))
 #' #Make the status a labeled factor
 #' Melanoma2 <- Melanoma2 %>% mutate(status = factor(status,levels = c("0","1","2"),
@@ -26,8 +27,9 @@
 #' ajfit <- survfit(Surv(time, status) ~1, data = Melanoma2)
 #' #Plot it
 #' ci_risk(ajfit)
-#' 
-ci_risk <- function(model_name, factor_order = NULL, text_size = 4, xlab_name = "Time", ylab_name = "State") {
+#'
+ci_risk <- function(model_name, factor_order = NULL, text_size = 4, xlab_name = "Time", ylab_name = "State",
+                    remove_at_time = FALSE) {
   #Check if missing model
   if(missing(model_name)) {
     "You must input a survfit model for model_name"
@@ -38,15 +40,15 @@ ci_risk <- function(model_name, factor_order = NULL, text_size = 4, xlab_name = 
     stop("Model must be a competing risks model. See ?survfit.formula to see how to make that model")
   }
   dat2 <- broom::tidy(model_name) %>% dplyr::group_by(state) %>%
-    dplyr::mutate(csm = cumsum(n.event)) 
-  
+    dplyr::mutate(csm = cumsum(n.event))
+
   brks <- pretty(dat2$time)
   # brks <- brks[brks <= max(dat2$time)]
   #Get values that are the closest to breakpoints but not past them
   minz <- c()
   minz_past_point <- c()
   for (i in brks) {
-    
+
     #The purpose of the second ifelse is to make sure that we don't end up with
     #two of the same times if there are no events past the second breakpoint
     minz <- c(minz,ifelse(i==0,min(dat2$time[dat2$time >= i]),
@@ -57,7 +59,7 @@ ci_risk <- function(model_name, factor_order = NULL, text_size = 4, xlab_name = 
     minz_past_point <- c(minz_past_point,
                          base::suppressWarnings(ifelse(min(dat2$time[dat2$time >= 0]) == max(dat2$time[dat2$time <= i]),
                                                        TRUE,FALSE)))
-    
+
   }
   #past points
   intr <- data.frame(minz, minz_past_point) %>% dplyr::filter(minz_past_point == TRUE) %>% pull(.,minz)
@@ -94,7 +96,7 @@ ci_risk <- function(model_name, factor_order = NULL, text_size = 4, xlab_name = 
   } else {
     dat3 <- dat3 %>% dplyr::mutate(art_zero = "FALSE")
   }
-  
+
   #Set cumsum to zero for the non overall risk because no events actually happened at time 0
   #Unless there is an event actually at 0
   #Verified
@@ -112,11 +114,12 @@ ci_risk <- function(model_name, factor_order = NULL, text_size = 4, xlab_name = 
     #and we want the total number of people at time zero unless an event happened
     #at time zero.
     #Maybe change to sum of n.censor + n.event?
-  dat3 <- dat3 %>%  dplyr::mutate(n.risk.new =
-                    ifelse(time == min(time,na.rm = TRUE) & min(time, na.rm = TRUE) != 0 | art_zero == TRUE,
-                           n.risk,n.risk-((dat3 %>% dplyr::group_by(time) %>%
-                                             dplyr::summarise(all_s = sum(n.event+n.censor, na.rm = TRUE)) %>%
-                                             dplyr::filter(time == time) %>% dplyr::pull(.,all_s)))))
+    dat3 <- dat3 %>%  dplyr::mutate(n.risk.new =
+                  ifelse(time == min(time,na.rm = TRUE) & min(time, na.rm = TRUE) != 0 | art_zero == TRUE,
+                  n.risk,n.risk-((dat3 %>% dplyr::group_by(time) %>%
+                  dplyr::summarise(all_s = sum(n.event+n.censor, na.rm = TRUE)) %>%
+                  dplyr::filter(time == time) %>% dplyr::pull(.,all_s)))))
+
   #Make into a factor when told to
   if(!is.null(factor_order)) {
     new_fac <- c("Number At Risk")
@@ -124,7 +127,7 @@ ci_risk <- function(model_name, factor_order = NULL, text_size = 4, xlab_name = 
     dat3$state2 <- factor(dat3$state2, levels = new_fac, ordered = TRUE)
   }
   #Verified
-  #Set times to be equal to breaks 
+  #Set times to be equal to breaks
   #Get unique times
   bn <- dat3 %>% arrange(time) %>% pull(.,time) %>% base::unique(.)
   #Named vector with breaks and times
@@ -132,10 +135,10 @@ ci_risk <- function(model_name, factor_order = NULL, text_size = 4, xlab_name = 
   #Column where the times correspond to the break times
   dat3$new_time <- vvvv[as.factor(dat3$time)]
   ggplot2::ggplot(data = dat3,
-                  ggplot2::aes(x=new_time,y=state2,label = ifelse(state == "Number At Risk",n.risk.new,csm))) + 
+                  ggplot2::aes(x=new_time,y=state2,label = ifelse(state == "Number At Risk",n.risk.new,csm))) +
     ggplot2::geom_text(size = 4) +
     ggplot2::scale_x_continuous(breaks = brks) +
     ggplot2::labs(y=ylab_name, x = xlab_name) +
     ggplot2::theme_classic()
-  
+
 }
