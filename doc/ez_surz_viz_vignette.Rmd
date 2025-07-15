@@ -1,0 +1,259 @@
+---
+title: "ez_surz_viz Vignette"
+output:
+  rmarkdown::html_vignette:
+      toc: true
+      number_sections: true
+vignette: >
+  %\VignetteIndexEntry{ez_surz_viz_vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7
+)
+```
+
+## Introduction  
+
+We will use the following packages:  
+
+```{r setup, message=FALSE,warning=FALSE}
+library(survival)
+library(dplyr)
+library(ez.surv.viz)
+```
+
+We will use the Melanoma dataset from the MASS package. See `?MASS::Melanoma` for more information on this dataset.  
+
+```{r}
+Melanoma <- MASS::Melanoma
+```
+
+We will make the variable in the correct format for competing risks having it become a factor with "0" being a person who was censored, and values "1", "2"... "N" be values that correspond to the specific outcomes/risks. In this case, we are defining "0" as someone who is censored, "1" as someone who died of Melanoma and, "2" as someone who had died from other causes.  
+
+```{r}
+#Make the variable in the format for competing risks
+Melanoma2 <- 
+Melanoma %>% 
+mutate(status = as.factor(recode(status, `2` = 0, `1` = 1, `3` = 2)))
+```
+
+We will now make the status variable a labeled factor. This is suggested when using this package because the graphs and tables will use the labels given to the levels of the factor, thus, making the plots easier to interpret.  
+
+```{r}
+Melanoma2 <- Melanoma2 %>% mutate(status = factor(status,levels = c("0","1","2"),
+   labels = c("Censored","Melanoma","Other Causes")))
+```
+
+Finally we will define the model. This model will be unstratified. In the future, this package will work with strata as well, but for now only unstratified models will work. This package only works with models defined using `survfit` from the Survival package.
+
+```{r}
+ajfit <- survfit(Surv(time, status) ~1, data = Melanoma2)
+```
+
+
+## Making a Cumulative Incidence Plot  
+
+All that is needed to make the plot is a singular competing risks model from `survfit`  
+
+```{r}
+ci_graph(ajfit)
+```
+
+Colors can be changed and confidence intervals can be turned off as well.  
+
+```{r}
+ci_graph(ajfit, outcome_colors = c("red","blue"), conf_int = FALSE)
+```
+
+The color palette can also be changed as well. A palette can be any of the palettes from `hcl.pals()`. Running the function `hcl.pals()` will give you all the fun palettes that you can use.  
+
+```{r}
+ci_graph(ajfit, col_palette = "Green-Brown")
+```
+
+The order of the outcomes in the legend can be modified as well. The default is alphabetical order.  
+
+```{r}
+ci_graph(ajfit, factor_order = c("Other Causes", "Melanoma"))
+```
+
+Since a GGPlot object is created, we can modify the plot like a normal GGPlot object. Here, we add a line at time 2000, and we change the x-axis scale breaks.
+
+```{r}
+library(ggplot2)
+ci_graph(ajfit, conf_int = FALSE) + geom_vline(xintercept = 2000) + scale_x_continuous(breaks = c(0,1000,2000,3000,4000,5000))
+```
+
+
+## Making a Risk Table For Competing Risks  
+
+All that is needed to make the table is a singular competing risks model from `survfit`. This table is a GGPlot object, so you can customize it as well. An important note is that the "Number at Risk" at any time corresponds to the number of people who had events before or at that time.  
+
+```{r}
+ci_risk(ajfit)
+```
+
+We can also adjust the the order of outcomes for the risk table. Remember that the first value in the vector always comes last on the table. Number at risk will always be on the top as well.  
+
+```{r}
+ci_risk(ajfit, factor_order = c("Other Causes", "Melanoma"))
+```
+
+Another feature is that since this is a GGPlot object, we can modify it as such. Here, we change the color of the tick marks to resemble the original graph.
+
+```{r}
+ci_risk(ajfit) + 
+  ggplot2::theme(axis.text.y = ggtext::element_markdown(colour = c(hcl.colors(2,palette = "Dark 3"),'black')))
+```
+
+
+## Making a Combined Figure Using Patchwork  
+
+The Patchwork library is a powerful tool that allows users to combine GGPlot objects together into nice looking figures. This package can be used in tandem with ez.surv.viz to create a combined plot of the cumulative incidence plot, and its subsequent risk table.  
+
+```{r,fig.height=7}
+library(patchwork)
+graph1 <- ci_graph(ajfit)
+table1 <- ci_risk(ajfit) + 
+  ggplot2::theme(axis.text.y = ggtext::element_markdown(colour = c(hcl.colors(2,palette = "Dark 3"),'black')))
+graph1/table1 + plot_layout(heights = c(3,1)) +
+  plot_annotation('This is a title',theme=ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.5)))
+```
+
+## Stratified Analysis  
+
+ez.surv.viz can also make stratified graphs. To do so, we can first setup a simple stratified model where sex is the stratifying variable.  
+
+```{r}
+Melanoma2 <- 
+  Melanoma %>% 
+  mutate(status = as.factor(recode(status, `2` = 0, `1` = 1, `3` = 2)))
+#Make the status a labeled factor
+Melanoma2 <- Melanoma2 %>% mutate(status = factor(status,levels = c("0","1","2"),
+                                                  labels = c("Censored","Melanoma","Other Causes"))) %>%
+  mutate(sex = factor(sex,levels = c("0","1"), labels = c("Female","Male")))
+#Define the model
+ajfit <- survfit(Surv(time, status) ~sex, data = Melanoma2)
+```
+
+Then, we can simply plot the cumulative incidence using the `strat_ci_graph` function with our new stratified model. This function has the same features as `ci_graph` outside of being able to change the order of the outcomes in the graph.  
+
+```{r}
+strat_ci_graph(ajfit)
+```
+
+## Building Survival Tables  
+
+To go along with our figures, we can create tables of estimates from our survival analysis. In this example, we used stratified survival analysis to create the table. We change a few of the variable names. "Maintained" becomes "New Maintain", "x" becomes "New Name". We also change the header times. "Time 10" becomes "New Time Name" and "Median Survival" becomes "The Median Survival Time". Furthermore, we change missing values to say "NR" rather than "-". Our output is this fully formatted flextable that can be customized using other flextable functions.
+
+```{r}
+fit2 <- survival::survfit(survival::Surv(time, status) ~ x, data = survival::aml)
+med_surv2 <- gtsummary::tbl_survfit(fit2, probs = 0.5, label_header = "Median Survial")
+#We can change the missing values for the upper confidence intervals to something else
+tbl_surv_to_flex(med_surv2, missing_value_replace = "NR", table_title = "Stratified Analysis")
+#Create a times table as well
+times2 <- gtsummary::tbl_survfit(fit2, times = c(10,25,50))
+#We can change the label and headers
+tbl_surv_to_flex(list(med_surv2,times2), missing_value_replace = "NR", table_title = "Stratified Analysis",
+                   label_names = c("Maintained" = "New Maintain", "x" = "New Name"),
+                   label_header_names = c("Time 10" = "New Time Name",
+                                          "Median Survial" = "The Median Survival Time"))
+```
+
+### Stacking Survival Tables  
+
+Often times when doing multiple models, we want to combine our tables of estimates into a singular table. We can use `stack_surv_flex` to do so. In this example, we define a stratified and unstratified model as below.  
+
+```{r}
+Melanoma <- MASS::Melanoma
+library(survival)
+library(dplyr)
+Melanoma2 <- 
+  Melanoma %>% 
+  mutate(status = as.factor(recode(status, `2` = 0, `1` = 1, `3` = 2)))
+#Make the status a labeled factor
+Melanoma2 <- Melanoma2 %>% mutate(status = factor(status,levels = c("0","1","2"),
+                                                  labels = c("Censored","Melanoma","Other Causes"))) %>%
+  mutate(sex = factor(sex,levels = c("0","1"), labels = c("Female","Male")))
+
+#Fit the models
+ajfit <- survfit(Surv(time, status) ~1, data = Melanoma2)
+ajfit_strata <- survfit(Surv(time, status) ~sex, data = Melanoma2)
+```
+
+Then, we create the GTSummary tables of times for our estimates.  
+
+```{r}
+#Create the tables for the specfic times
+times2 <- gtsummary::tbl_survfit(ajfit, times = c(1000,2000,3000))
+times2_strata  <- gtsummary::tbl_survfit(ajfit_strata, times = c(1000,2000,3000))
+```
+
+Next, we use `tbl_surv_to_flex` to create our flextables for our models, and we put them in a list.  
+
+```{r}
+#Use the tbl_surv_to_flex function
+xv <- ez.surv.viz::tbl_surv_to_flex(times2)
+xv_strat <- ez.surv.viz::tbl_surv_to_flex(times2_strata)
+
+#Combine in a list
+comb_list <- list(xv,xv_strat)
+```
+
+Finally, we use the function `stack_surv_flex` to stack the tables. The first table in the list goes at the top of table, then the next table, and so on and so forth. We also change the variable name "Overall" to "All People"
+
+```{r}
+stack_surv_flex(comb_list, label_names = c("Overall" = "All People"))
+```
+
+Unfortunately, if you are combining several cumulative incidence models in one table that are unstratified, they will all have the variable name, "Overall". In order to change the variable names, you must use `flextable::compose`.  
+
+## Timepoint Plots  
+
+Timepoint plots are a way to easily visualize your subject's journey in the study over time and see which events they have been affected by. In this example dataframe, we have a column called `"subj_id"`, which gives our three subjects a unique identifier. We have columns `e_1` through `e_5`, which have the time that the subject had the event or NA if they did not have an event. Also, there is column `e_1_2` which gives the time for subjects who had an "e_1" event for the second time. Finally, we have column2 `e_6_at_4` and `e_6_at_8`. These are columns that give the subject's count of a variable at times 4 and 8. For example subject 1 has a count of 4 at time 4 and time 8, subject 2 has a count of 3 at time 4 and a count of 7 at time 8, and subject 3 has a count of 8 at time 4 and 9 at time 8. We will talk more about this column later.  
+
+```{r}
+toyx <- data.frame(subj_id = c("1","2","3"), e_1 = c(1,4,8), e_1_2 = c(3,8,NA), e_2 = c(NA,6,NA),
+                   e_3 = c(4,NA,6), e_4 = c(2,10,NA),
+                   e_5 = c(10,2,14), e_6_at_4 = c(4,3,8), e_6_at_8 = c(4,7,9))
+```
+
+The first thing we must do is combine the columns `e_1` and `e_1_2` into a singular column called `e_1`. The purpose of this is so the function can credit the subject for having two "e_1" events, instead of thinking `e_1` and `e_1_2` are separate events from each other. This is easy to do using `pivot_longer`.  
+```{r}
+toyx_new <- toyx %>% tidyr::pivot_longer(cols = c(e_1,e_1_2), names_to = NULL, values_to = 'e_1')
+```
+
+Now we can use our function to create our plot. We must exclude columns `e_6_at_4` and `e_6_at_8` from our function because that column consists of counts at a specific time rather than the time of an event. We will add it in to the plot later. We make sure to specify the `id` argument to be `"subj_id"` because our id column is named subj_id and not id. The purpose of `base::suppressWarnings(print())` is to remove erroneous error messages that occur because of missing events having NA values.  
+
+```{r}
+base::suppressWarnings(print(timepoint_plot(toyx_new %>% dplyr::select(-c(e_6_at_4, e_6_at_8)), id = "subj_id")))
+```
+
+Lets change the event names and make some other fun customizations. To change event names, you can change the column names of the events.  
+
+```{r}
+toyx_new_2 <- toyx_new %>% dplyr::rename("Event 1" = e_1, "Event 2" = e_2, "Cancer" = e_3, "Common Cold" = e_4, "Flu" = e_5)
+
+base::suppressWarnings(print(timepoint_plot(toyx_new_2 %>% dplyr::select(-c(e_6_at_4, e_6_at_8)), id = "subj_id", col_palette = "Viridis",
+               xlab_name = "Years", point_size = 4, line_size = 1)))
+```
+
+Finally, we can add `e_6_at_8` to our plot. Remember that this column is the counts of a variable at time 8. In this example, we will show a triangle at time 8 if the count is greater than 5. We make sure to rename the "subj_id" column to "id" in our new `geom_point` code because our function considers the y aesthetic to be called "id" always. This is a must-do. Using the function `scale_shape_manual` we create a legend for our counts variable/shape. We used a named vector in both the `values` and `labels` argument to do this. The name "Yep" corresponds to the value that a subject gets if they had correct counts (counts > 5) at either time 4, 8, or both. This gives the subject a triangle at the first time they had correct counts. Subject 1 never has correct counts, so they do not have a triangle. Having the `limits` argument only include "Yep" and not NA prevents NA, which is an empty shape from being in the legend,
+
+```{r}
+base::suppressWarnings(print(timepoint_plot(toyx_new_2 %>% dplyr::select(-c(e_6_at_4,e_6_at_8)),
+                                            id = "subj_id") +
+                              geom_point(data = toyx_new_2 %>% rename(id = "subj_id"),
+                                aes(x = case_when(e_6_at_4 > 5 ~ 4, e_6_at_8 > 5 ~ 8, TRUE ~ NA),
+  shape = case_when(e_6_at_4 > 5 ~ "Yep", e_6_at_8 > 5 ~ "Yep", TRUE ~ "NA")), size = 3,
+                                          position = position_nudge(y = 0.19)) +
+  scale_shape_manual(name = "Counts", values = c("Yep" = 25, "NA" = NA), limits = c("Yep"),
+                                                  labels = c("Yep" = "Correct Counts"))))
+```
+
