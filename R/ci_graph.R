@@ -53,6 +53,12 @@ ci_graph <- function(model_name, line_size = 1, outcome_colors=NULL, col_palette
   }
   #Tidy the the data
   dat2 <- broom::tidy(model_name)
+  #If no zero time, add in artifical zero time
+  if(min(dat2$time != 0, na.rm = TRUE)) {
+    for (z in unique(dat2$state)) {
+      dat2 <- dat2 %>% add_row(state = z, estimate = 0, conf.high = 0, conf.low = 0, time = 0)
+    }
+  }
   #Make sure color palette exists
   if(!(col_palette %in% grDevices::hcl.pals())) {
     stop("The color palette must be one of the hcl.pals()")
